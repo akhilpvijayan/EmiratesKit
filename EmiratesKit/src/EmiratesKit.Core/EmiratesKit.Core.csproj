@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<LangVersion>latest</LangVersion>
+
+		<PackageId>EmiratesKit.Core</PackageId>
+		<Version>1.0.0</Version>
+		<Authors>Akhil P Vijayan</Authors>
+		<Description>
+			UAE document validation for .NET. Validates Emirates ID
+			(Luhn), UAE IBAN (Mod-97), TRN, mobile, and passport numbers.
+			Zero external dependencies.
+		</Description>
+		<PackageTags>UAE;Emirates;EmiratesID;IBAN;TRN;Validation;GCC;Dubai</PackageTags>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/YOURUSERNAME/UaeValidator</RepositoryUrl>
+		<Copyright>Copyright 2026 Akhil P Vijayan</Copyright>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+</Project>
