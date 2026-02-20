@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<PackageId>EmiratesKit.Annotations</PackageId>
+		<Version>1.0.0</Version>
+		<Authors>Akhil P Vijayan</Authors>
+		<Description>
+			DataAnnotation attributes [EmiratesId], [UaeIban], [UaeTrn],
+			[UaeMobile] for UAE document validation.
+		</Description>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\EmiratesKit.Core\EmiratesKit.Core.csproj" />
+	</ItemGroup>
+</Project>

@@ -1,0 +1,25 @@
+name: Publish to NuGet
+ 
+on:
+  push:
+    tags:
+      - 'v*'   # git tag v1.0.0 && git push origin v1.0.0
+ 
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-dotnet@v4
+      with: { dotnet-version: 8.0.x }
+    - run: dotnet restore && dotnet build -c Release --no-restore
+    - run: dotnet test -c Release --no-build
+    - run: dotnet pack src/UaeValidator.Core                -c Release -o ./nupkgs
+    - run: dotnet pack src/UaeValidator.Annotations         -c Release -o ./nupkgs
+    - run: dotnet pack src/UaeValidator.FluentValidation    -c Release -o ./nupkgs
+    - name: Push to NuGet.org
+      run: |
+        dotnet nuget push ./nupkgs/*.nupkg \
+          --api-key ${{ secrets.NUGET_API_KEY }} \
+          --source https://api.nuget.org/v3/index.json \
+          --skip-duplicate
