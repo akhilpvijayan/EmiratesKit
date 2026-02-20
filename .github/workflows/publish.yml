@@ -14,9 +14,9 @@ jobs:
       with: { dotnet-version: 8.0.x }
     - run: dotnet restore && dotnet build -c Release --no-restore
     - run: dotnet test -c Release --no-build
-    - run: dotnet pack src/UaeValidator.Core                -c Release -o ./nupkgs
-    - run: dotnet pack src/UaeValidator.Annotations         -c Release -o ./nupkgs
-    - run: dotnet pack src/UaeValidator.FluentValidation    -c Release -o ./nupkgs
+    - run: dotnet pack EmiratesKit.Core                -c Release -o ./nupkgs
+    - run: dotnet pack EmiratesKit.Annotations         -c Release -o ./nupkgs
+    - run: dotnet pack EmiratesKit.FluentValidation    -c Release -o ./nupkgs
     - name: Push to NuGet.org
       run: |
         dotnet nuget push ./nupkgs/*.nupkg \
