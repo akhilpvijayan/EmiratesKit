@@ -27,12 +27,13 @@ jobs:
         dotnet pack EmiratesKit.Annotations -c Release -o ./nupkgs
         dotnet pack EmiratesKit.FluentValidation -c Release -o ./nupkgs
 
-    - name: Push to NuGet.org
+    - name: Push packages (trusted)
       run: |
         echo "Pushing packages..."
         for pkg in ./nupkgs/*.nupkg; do
           dotnet nuget push "$pkg" \
-            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --api-key VSTS \
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
         done
+
