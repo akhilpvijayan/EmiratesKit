@@ -4,7 +4,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<PackageId>EmiratesKit.FluentValidation</PackageId>
-		<Version>1.0.0</Version>
+		<Version>1.0.1</Version>
 		<Authors>Akhil P Vijayan</Authors>
 		<Description>
 			FluentValidation extensions .ValidEmiratesId(), .ValidUaeIban(),
