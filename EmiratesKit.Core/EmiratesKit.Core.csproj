@@ -15,15 +15,15 @@
 		</Description>
 		<PackageTags>UAE;Emirates;EmiratesID;IBAN;TRN;Validation;GCC;Dubai</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageReadmeFile>Readme.core.md</PackageReadmeFile>
 		<PackageIcon>icon.png</PackageIcon>
-		<RepositoryUrl>https://github.com/YOURUSERNAME/UaeValidator</RepositoryUrl>
+		<RepositoryUrl>https://github.com/akhilpvijayan/EmiratesKit</RepositoryUrl>
 		<Copyright>Copyright 2026 Akhil P Vijayan</Copyright>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
 	<ItemGroup>
-		<None Include="..\README.md" Pack="true" PackagePath="\" />
+		<None Include="Readme.core.md" Pack="true" PackagePath="\" />
 		<None Include="..\assets\icon.png" Pack="true" PackagePath="" />
 	</ItemGroup>
 	<ItemGroup>
