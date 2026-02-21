@@ -11,11 +11,14 @@
 			.ValidUaeTrn(), .ValidUaeMobile() for UAE documents.
 		</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReadmeFile>Readme.fluentvalidation.md</PackageReadmeFile>
 		<PackageIcon>icon.png</PackageIcon>
+		<RepositoryUrl>https://github.com/akhilpvijayan/EmiratesKit</RepositoryUrl>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\EmiratesKit.Core\EmiratesKit.Core.csproj" />
 		<PackageReference Include="FluentValidation" Version="11.*" />
 		<None Include="..\assets\icon.png" Pack="true" PackagePath="" />
+		<None Include="Readme.fluentvalidation.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 </Project>

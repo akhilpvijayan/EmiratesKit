@@ -10,11 +10,14 @@
 			DataAnnotation attributes [EmiratesId], [UaeIban], [UaeTrn],
 			[UaeMobile] for UAE document validation.
 		</Description>
+		<PackageReadmeFile>Readme.annotations.md</PackageReadmeFile>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageIcon>icon.png</PackageIcon>
+		<RepositoryUrl>https://github.com/akhilpvijayan/EmiratesKit</RepositoryUrl>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\EmiratesKit.Core\EmiratesKit.Core.csproj" />
 		<None Include="..\assets\icon.png" Pack="true" PackagePath="" />
+		<None Include="Readme.annotations.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 </Project>
