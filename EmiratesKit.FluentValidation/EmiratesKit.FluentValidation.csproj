@@ -11,9 +11,11 @@
 			.ValidUaeTrn(), .ValidUaeMobile() for UAE documents.
 		</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageIcon>icon.png</PackageIcon>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\EmiratesKit.Core\EmiratesKit.Core.csproj" />
 		<PackageReference Include="FluentValidation" Version="11.*" />
+		<None Include="..\assets\icon.png" Pack="true" PackagePath="" />
 	</ItemGroup>
 </Project>

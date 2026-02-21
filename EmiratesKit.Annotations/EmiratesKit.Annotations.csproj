@@ -11,8 +11,10 @@
 			[UaeMobile] for UAE document validation.
 		</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageIcon>icon.png</PackageIcon>
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\EmiratesKit.Core\EmiratesKit.Core.csproj" />
+		<None Include="..\assets\icon.png" Pack="true" PackagePath="" />
 	</ItemGroup>
 </Project>

@@ -9,31 +9,32 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
-    - name: Restore & Build
-      run: dotnet build -c Release
+      - name: Restore & Build
+        run: dotnet build -c Release
 
-    - name: Run Tests
-      run: dotnet test -c Release
+      - name: Run Tests
+        run: dotnet test -c Release
 
-    - name: Pack Projects
-      run: |
-        dotnet pack EmiratesKit.Core -c Release -o ./nupkgs
-        dotnet pack EmiratesKit.Annotations -c Release -o ./nupkgs
-        dotnet pack EmiratesKit.FluentValidation -c Release -o ./nupkgs
+      - name: Pack Projects
+        run: |
+          dotnet pack EmiratesKit.Core -c Release -o ./nupkgs
+          dotnet pack EmiratesKit.Annotations -c Release -o ./nupkgs
+          dotnet pack EmiratesKit.FluentValidation -c Release -o ./nupkgs
 
-    - name: Push packages (trusted)
-      run: |
-        echo "Pushing packages..."
-        for pkg in ./nupkgs/*.nupkg; do
-          dotnet nuget push "$pkg" \
-            --api-key VSTS \
-            --source https://api.nuget.org/v3/index.json \
-            --skip-duplicate
-        done
-
+      - name: Push packages
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          echo "Pushing packages..."
+          for pkg in ./nupkgs/*.nupkg; do
+            dotnet nuget push "$pkg" \
+              --api-key $NUGET_API_KEY \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          done
