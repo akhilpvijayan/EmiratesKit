@@ -16,6 +16,7 @@
 		<PackageTags>UAE;Emirates;EmiratesID;IBAN;TRN;Validation;GCC;Dubai</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageIcon>icon.png</PackageIcon>
 		<RepositoryUrl>https://github.com/YOURUSERNAME/UaeValidator</RepositoryUrl>
 		<Copyright>Copyright 2026 Akhil P Vijayan</Copyright>
 		<IncludeSymbols>true</IncludeSymbols>
@@ -23,6 +24,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<None Include="..\README.md" Pack="true" PackagePath="\" />
+		<None Include="assets\icon.png" Pack="true" PackagePath="" />
 	</ItemGroup>
 	<ItemGroup>
 	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
