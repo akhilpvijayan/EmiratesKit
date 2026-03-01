@@ -15,6 +15,38 @@ namespace EmiratesKit.Core.Validators
 
         public static bool Check(string? input) => _instance.IsValid(input);
         public static ValidationResult Parse(string? input) => _instance.Validate(input);
+
+        public static IReadOnlyList<BatchValidationResult<ValidationResult>> ParseMany(
+            IEnumerable<string?> inputs)
+        {
+            return inputs
+                .Select(input => new BatchValidationResult<ValidationResult>
+                {
+                    Input  = input,
+                    Result = _instance.Validate(input)
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// Returns a masked passport number safe for logging.
+        /// Preserves the letter prefix and last 3 digits.
+        /// Example: A1234567  →  A****567
+        /// </summary>
+        public static string Mask(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return string.Empty;
+         
+            var trimmed = input.Trim().ToUpperInvariant();
+         
+            // Passport: 1 letter + 7 digits = 8 chars
+            if (trimmed.Length != 8
+                || !char.IsLetter(trimmed[0])
+                || !trimmed[1..].All(char.IsDigit))
+                return trimmed;
+         
+            return trimmed[0] + new string('*', 4) + trimmed[^3..];
+        }
         public bool IsValid(string? input) => Validate(input).IsValid;
 
         public ValidationResult Validate(string? input)
