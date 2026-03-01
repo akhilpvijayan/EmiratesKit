@@ -15,6 +15,35 @@ namespace EmiratesKit.Core.Validators
         private static readonly UaeTrnValidator _instance = new();
         public static bool Check(string? input) => _instance.IsValid(input);
         public static ValidationResult Parse(string? input) => _instance.Validate(input);
+
+        public static IReadOnlyList<BatchValidationResult<ValidationResult>> ParseMany(
+            IEnumerable<string?> inputs)
+        {
+            return inputs
+                .Select(input => new BatchValidationResult<ValidationResult>
+                {
+                    Input  = input,
+                    Result = _instance.Validate(input)
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// Returns a masked TRN safe for logging.
+        /// Preserves the first 3 digits (100 prefix) and last 3 digits.
+        /// Example: 100123456700003  →  100*********003
+        /// </summary>
+        public static string Mask(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return string.Empty;
+         
+            var trimmed = input.Trim();
+         
+            if (trimmed.Length != 15 || !trimmed.All(char.IsDigit))
+                return trimmed;
+         
+            return trimmed[..3] + new string('*', 9) + trimmed[^3..];
+        }
         public bool IsValid(string? input) => Validate(input).IsValid;
 
         public ValidationResult Validate(string? input)
