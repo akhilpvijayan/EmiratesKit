@@ -1,7 +1,7 @@
 # EmiratesKit
 
 [![NuGet](https://img.shields.io/nuget/v/EmiratesKit.Core.svg)](https://www.nuget.org/packages/EmiratesKit.Core)
-[![Build](https://github.com/YOURUSERNAME/EmiratesKit/actions/workflows/build.yml/badge.svg)](https://github.com/YOURUSERNAME/EmiratesKit/actions)
+[![Build](https://github.com/akhilpvijayan/EmiratesKit/actions/workflows/build.yml/badge.svg)](https://github.com/akhilpvijayan/EmiratesKit/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 UAE document validation library for .NET. Validates Emirates ID, UAE IBAN, Tax Registration Number (TRN), mobile numbers, and passport numbers with zero external dependencies.
@@ -115,8 +115,8 @@ Valid prefixes: `050`, `052`, `054`, `056`, `057` (e& Etisalat) and `055`, `058`
 ```csharp
 using EmiratesKit.Core.Validators;
 
-bool valid = UaeTrnValidator.Check("100123456700003");   // True
-bool invalid = UaeTrnValidator.Check("200123456700003"); // False — does not start with 100
+bool valid   = UaeTrnValidator.Check("100123456700003");   // True
+bool invalid = UaeTrnValidator.Check("200123456700003");   // False — does not start with 100
 ```
 
 ### Passport
@@ -124,9 +124,107 @@ bool invalid = UaeTrnValidator.Check("200123456700003"); // False — does not s
 ```csharp
 using EmiratesKit.Core.Validators;
 
-bool valid = UaePassportValidator.Check("A1234567");   // True
-bool invalid = UaePassportValidator.Check("12345678"); // False — no leading letter
+bool valid   = UaePassportValidator.Check("A1234567");   // True
+bool invalid = UaePassportValidator.Check("12345678");   // False — no leading letter
 ```
+
+---
+
+## Batch Validation
+
+`ParseMany()` validates a collection of inputs in one call and returns every result including failures. It never stops on the first error, so callers see all failures at once. Available on all five validator classes.
+
+```csharp
+using EmiratesKit.Core.Validators;
+
+var ids = new[] { "784-1990-1234567-6", "784-1990-0000000-0", null };
+
+var results = EmiratesIdValidator.ParseMany(ids);
+
+foreach (var r in results)
+{
+    if (r.IsValid)
+        Console.WriteLine($"{r.Input} — valid, born {r.Result.BirthYear}");
+    else
+        Console.WriteLine($"{r.Input} — {r.ErrorCode}");
+}
+
+// 784-1990-1234567-6 — valid, born 1990
+// 784-1990-0000000-0 — INVALID_CHECKSUM
+//  — EMPTY_INPUT
+```
+
+Each item in the returned list is a `BatchValidationResult<T>` with `Input`, `Result`, `IsValid`, and `ErrorCode` properties.
+
+---
+
+## Masking
+
+`Mask()` returns a version of the document number safe for logging and display. Available on all five validator classes.
+
+```csharp
+using EmiratesKit.Core.Validators;
+
+EmiratesIdValidator.Mask("784199012345676");          // 784-****-*******-6
+UaeIbanValidator.Mask("AE070331234567890123456");      // AE07033***********23456
+UaeTrnValidator.Mask("100123456700003");               // 100*********003
+UaeMobileValidator.Mask("+971501234567");              // +9715****567
+UaePassportValidator.Mask("A1234567");                 // A****567
+```
+
+Each document type preserves enough to identify the record — country code, bank code, carrier prefix, or letter prefix — while masking the sensitive middle digits. Returns an empty string for null input. Returns the input unchanged if it cannot be parsed.
+
+---
+
+## Sanitize
+
+`Sanitize()` reformats a messy or inconsistently formatted input into the canonical display format without validating it. Available on `EmiratesIdValidator` and `UaeMobileValidator`.
+
+```csharp
+using EmiratesKit.Core.Validators;
+
+// Emirates ID — raw digits, spaces, or already formatted all produce the same output
+EmiratesIdValidator.Sanitize("784199012345676");      // 784-1990-1234567-6
+EmiratesIdValidator.Sanitize("784 1990 1234567 6");   // 784-1990-1234567-6
+EmiratesIdValidator.Sanitize("784-1990-1234567-6");   // 784-1990-1234567-6
+
+// Mobile — all UAE formats normalised to +971XXXXXXXXX
+UaeMobileValidator.Sanitize("00971501234567");         // +971501234567
+UaeMobileValidator.Sanitize("0501234567");             // +971501234567
+UaeMobileValidator.Sanitize("501234567");              // +971501234567
+```
+
+Does not validate — use `Parse()` after sanitizing if validation is also needed. Returns an empty string for null input. Does not throw.
+
+---
+
+## MeetsMinimumAge
+
+`MeetsMinimumAge()` checks whether the Emirates ID holder likely meets a minimum age requirement based on the birth year in the ID. Returns `bool?` because Emirates ID contains only the birth year, not the full date of birth.
+
+```csharp
+using EmiratesKit.Core.Validators;
+
+// Born 1984 — checking minimum age 21 — clearly old enough
+bool? result = EmiratesIdValidator.MeetsMinimumAge("784-1984-1234567-6", 21);
+// result = true
+
+// Born 2015 — checking minimum age 21 — clearly too young
+bool? result = EmiratesIdValidator.MeetsMinimumAge("784-2015-1234567-6", 21);
+// result = false
+
+// Born exactly 21 years ago — cannot confirm without full date of birth
+bool? result = EmiratesIdValidator.MeetsMinimumAge("784-2004-1234567-6", 21);
+// result = null
+```
+
+| Return value | Meaning |
+|---|---|
+| `true` | Birth year is before the threshold year — person is definitely old enough |
+| `false` | Birth year is after the threshold year — person is definitely too young |
+| `null` | Birth year equals the threshold year, or the Emirates ID is invalid |
+
+Always handle the `null` case explicitly. For age-restricted services, treat `null` as "further verification required." Throws `ArgumentOutOfRangeException` if `minimumAge` is negative.
 
 ---
 
@@ -169,7 +267,7 @@ Null and empty values pass the attribute checks — use `[Required]` separately 
 
 ## FluentValidation
 
-Use `EmiratesKit.FluentValidation` to add UAE validation rules inside a `AbstractValidator<T>` class.
+Use `EmiratesKit.FluentValidation` to add UAE validation rules inside an `AbstractValidator<T>` class.
 
 ```bash
 dotnet add package EmiratesKit.FluentValidation
@@ -247,7 +345,6 @@ public class CustomerService
         if (!result.IsValid)
             throw new ValidationException(result.ErrorMessage);
 
-        // proceed with registration
         return true;
     }
 }
