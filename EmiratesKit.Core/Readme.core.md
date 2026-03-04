@@ -177,6 +177,152 @@ UaePassportValidator.Check("AB123456");    // False — two letters
 
 ---
 
+## Batch Validation
+
+`ParseMany()` validates a collection of inputs in one call and returns every result including failures. It never stops on first error, so callers see all failures at once. Useful for bulk onboarding, file imports, and data migration pipelines.
+
+Available on all five validator classes.
+
+```csharp
+using EmiratesKit.Core.Validators;
+
+var ids = new[] { "784-1990-1234567-6", "784-1990-0000000-0", null };
+
+var results = EmiratesIdValidator.ParseMany(ids);
+
+foreach (var r in results)
+{
+    if (r.IsValid)
+        Console.WriteLine($"{r.Input} — valid, born {r.Result.BirthYear}");
+    else
+        Console.WriteLine($"{r.Input} — {r.ErrorCode}");
+}
+
+// 784-1990-1234567-6 — valid, born 1990
+// 784-1990-0000000-0 — INVALID_CHECKSUM
+//  — EMPTY_INPUT
+```
+
+Each item in the returned `IReadOnlyList<BatchValidationResult<T>>` exposes:
+
+| Property | Type | Description |
+|---|---|---|
+| `Input` | `string?` | The original input string as provided |
+| `Result` | `T` | The full validation result including all parsed fields |
+| `IsValid` | `bool` | Shortcut for `Result.IsValid` |
+| `ErrorCode` | `string?` | Shortcut for `Result.ErrorCode` |
+
+---
+
+## Masking
+
+`Mask()` returns a version of the document number safe for logging, error messages, and display. Enough of the value is preserved to identify the record — not enough to reconstruct the full number.
+
+Available on all five validator classes.
+
+```csharp
+using EmiratesKit.Core.Validators;
+
+EmiratesIdValidator.Mask("784199012345676");          // 784-****-*******-6
+UaeIbanValidator.Mask("AE070331234567890123456");      // AE07033***********23456
+UaeTrnValidator.Mask("100123456700003");               // 100*********003
+UaeMobileValidator.Mask("+971501234567");              // +9715****567
+UaePassportValidator.Mask("A1234567");                 // A****567
+```
+
+**Masking strategy per document:**
+
+| Document | Preserved | Masked |
+|---|---|---|
+| Emirates ID | Country code `784`, check digit | Birth year, sequence number |
+| IBAN | `AE` + check digits + bank code + last 5 account digits | Middle 11 account digits |
+| TRN | First 3 digits (`100`), last 3 digits | Middle 9 digits |
+| Mobile | Country code `+971` + first carrier digit, last 3 digits | Middle 4 digits |
+| Passport | Letter prefix, last 3 digits | Middle 4 digits |
+
+`Mask()` accepts all valid input formats. Mobile normalises to `+971` before masking regardless of input format. Returns an empty string for null input. Returns the input unchanged if it cannot be parsed.
+
+---
+
+## Sanitize
+
+`Sanitize()` reformats a messy or inconsistently formatted input into the canonical display format without validating it. Use this to clean data before storing or displaying. To validate after sanitizing, pass the result to `Parse()`.
+
+Available on `EmiratesIdValidator` and `UaeMobileValidator`.
+
+```csharp
+using EmiratesKit.Core.Validators;
+
+// Emirates ID — raw digits, spaces, or already formatted — all produce the same output
+EmiratesIdValidator.Sanitize("784199012345676");      // 784-1990-1234567-6
+EmiratesIdValidator.Sanitize("784 1990 1234567 6");   // 784-1990-1234567-6
+EmiratesIdValidator.Sanitize("784-1990-1234567-6");   // 784-1990-1234567-6
+
+// Mobile — all UAE formats normalised to +971XXXXXXXXX
+UaeMobileValidator.Sanitize("+971501234567");          // +971501234567
+UaeMobileValidator.Sanitize("00971501234567");          // +971501234567
+UaeMobileValidator.Sanitize("0501234567");              // +971501234567
+UaeMobileValidator.Sanitize("501234567");               // +971501234567
+```
+
+Returns an empty string for null input. Returns the trimmed input unchanged if it cannot be reformatted. Does not throw.
+
+---
+
+## MeetsMinimumAge
+
+`MeetsMinimumAge()` checks whether the Emirates ID holder likely meets a minimum age requirement based on the birth year in the ID.
+
+Returns `bool?` rather than `bool` because Emirates ID contains only the birth year, not the full date of birth. For the exact threshold year, the method cannot determine with certainty whether the person has crossed their birthday yet.
+
+```csharp
+using EmiratesKit.Core.Validators;
+
+// Born 1984 — checking minimum age 21 — clearly old enough
+bool? result = EmiratesIdValidator.MeetsMinimumAge("784-1984-1234567-6", 21);
+// result = true
+
+// Born 2015 — checking minimum age 21 — clearly too young
+bool? result = EmiratesIdValidator.MeetsMinimumAge("784-2015-1234567-6", 21);
+// result = false
+
+// Born exactly 21 years ago — cannot confirm without full date of birth
+bool? result = EmiratesIdValidator.MeetsMinimumAge("784-2004-1234567-6", 21);
+// result = null
+```
+
+**Return values:**
+
+| Value | Meaning |
+|---|---|
+| `true` | Birth year is before the threshold year — person is definitely old enough |
+| `false` | Birth year is after the threshold year — person is definitely too young |
+| `null` | Birth year equals the threshold year — full date of birth required to confirm |
+| `null` | The Emirates ID is invalid or null |
+
+Always handle the `null` case explicitly. For age-restricted services, treat `null` as "further verification required."
+
+```csharp
+var meetsAge = EmiratesIdValidator.MeetsMinimumAge(emiratesId, minimumAge: 21);
+
+switch (meetsAge)
+{
+    case true:
+        // Definitely old enough — proceed
+        break;
+    case false:
+        // Definitely too young — reject
+        break;
+    case null:
+        // Cannot determine — request additional verification
+        break;
+}
+```
+
+Throws `ArgumentOutOfRangeException` if `minimumAge` is negative.
+
+---
+
 ## Dependency Injection
 
 Register all validators with the ASP.NET Core service container in `Program.cs`:
@@ -251,6 +397,21 @@ Every failed validation returns a machine-readable `ErrorCode` string on the res
 | `INVALID_CHECKSUM` | Luhn check (Emirates ID) or Mod-97 check (IBAN) failed. |
 | `INVALID_PREFIX` | TRN does not start with `100`. |
 | `INVALID_MOBILE_PREFIX` | Prefix is not a registered UAE carrier prefix. |
+
+---
+
+## API Reference
+
+Quick reference for every static method across all validators.
+
+| Method | Available on | Returns |
+|---|---|---|
+| `Check(string?)` | All validators | `bool` |
+| `Parse(string?)` | All validators | Typed result (`EmiratesIdInfo`, `IbanInfo`, etc.) |
+| `ParseMany(IEnumerable<string?>)` | All validators | `IReadOnlyList<BatchValidationResult<T>>` |
+| `Mask(string?)` | All validators | `string` |
+| `Sanitize(string?)` | EmiratesId, Mobile | `string` |
+| `MeetsMinimumAge(string?, int)` | EmiratesId only | `bool?` |
 
 ---
 
