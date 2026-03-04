@@ -24,6 +24,93 @@ namespace EmiratesKit.Core.Validators
         public static bool Check(string? input) => _instance.IsValid(input);
         public static EmiratesIdInfo Parse(string? input) => _instance.Validate(input);
 
+        /// <summary>
+        /// Validates a collection of Emirates IDs and returns each input paired with its result.
+        /// Always processes all inputs — does not stop on first failure.
+        /// </summary>
+        public static IReadOnlyList<BatchValidationResult<EmiratesIdInfo>> ParseMany(
+            IEnumerable<string?> inputs)
+        {
+            return inputs
+                .Select(input => new BatchValidationResult<EmiratesIdInfo>
+                {
+                    Input  = input,
+                    Result = _instance.Validate(input)
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// Returns a masked version of the Emirates ID safe for logging and display.
+        /// Birth year and sequence number are masked. Country code and check digit are preserved.
+        /// Returns the input unchanged if it cannot be parsed to a valid format.
+        /// Example: 784-1990-1234567-6  →  784-****-*******-6
+        /// </summary>
+        public static string Mask(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return string.Empty;
+         
+            var trimmed    = input.Trim();
+            var normalized = trimmed.Replace("-", "").Replace(" ", "");
+         
+            if (normalized.Length != EmiratesIdConstants.TotalDigits
+                || !normalized.All(char.IsDigit))
+                return trimmed; // cannot parse — return as-is
+         
+            // Keep: 784 (country code) and last digit (check digit)
+            // Mask: positions 3-6 (birth year) and 7-13 (sequence)
+            return $"784-****-*******-{normalized[^1]}";
+        }
+
+        /// <summary>
+        /// Reformats an Emirates ID into the canonical 784-YYYY-NNNNNNN-C format.
+        /// Accepts raw digits, space-separated, or already formatted input.
+        /// Returns the input unchanged if it cannot be reformatted (wrong length, non-digits).
+        /// Does not validate — use Parse() to validate.
+        /// </summary>
+        public static string Sanitize(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return string.Empty;
+         
+            // Strip all dashes and spaces to get raw digits
+            var digits = input.Trim().Replace("-", "").Replace(" ", "");
+         
+            if (digits.Length != EmiratesIdConstants.TotalDigits
+                || !digits.All(char.IsDigit))
+                return input.Trim(); // cannot reformat — return trimmed original
+         
+            // Reformat to 784-YYYY-NNNNNNN-C
+            return $"{digits[..3]}-{digits[3..7]}-{digits[7..14]}-{digits[14]}";
+        }
+
+        /// <summary>
+        /// Checks whether the Emirates ID holder likely meets a minimum age requirement.
+        /// Returns true if the birth year indicates the person is definitely old enough.
+        /// Returns false if the birth year indicates the person is definitely too young.
+        /// Returns null if the birth year is the exact threshold year and certainty is
+        /// not possible from year alone (full date of birth required for confirmation).
+        /// Returns null also if the Emirates ID is invalid.
+        /// </summary>
+        public static bool? MeetsMinimumAge(string? input, int minimumAge)
+        {
+            if (minimumAge < 0)
+                throw new ArgumentOutOfRangeException(nameof(minimumAge),
+                    "Minimum age cannot be negative.");
+         
+            var result = _instance.Validate(input);
+         
+            if (!result.IsValid) return null;
+         
+            var currentYear    = DateTime.Now.Year;
+            var thresholdYear  = currentYear - minimumAge;
+         
+            if (result.BirthYear < thresholdYear)  return true;   // definitely old enough
+            if (result.BirthYear > thresholdYear)  return false;  // definitely too young
+         
+            // BirthYear == thresholdYear — depends on exact date of birth
+            return null;
+        }
+
         // ── Instance API (for DI / mocking) ─────────────────────────
         public bool IsValid(string? input) => Validate(input).IsValid;
 
